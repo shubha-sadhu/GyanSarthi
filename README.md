@@ -1,4 +1,5 @@
 # Gyan Sarthi — Full Stack
+SIH 2026 project of Team GyanSarthi, IIEST Shibpur
 
 Three services, run together:
 
@@ -108,3 +109,4 @@ Then browse `http://127.0.0.1:8000/docs` directly — this data lives only in th
 | Node server | 4000 | Auth + gateway |
 | Python backend | 8000 | RAG, vector store, competency engine |
 | MongoDB | 27017 (default) | Login accounts |
+
