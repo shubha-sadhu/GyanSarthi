@@ -1,0 +1,115 @@
+{
+  "domains": [
+    {
+      "domain_id": "survey_methodology",
+      "name": "Survey Methodology & Sampling Design",
+      "description": "Sample design, stratification, NSSO survey rounds, estimation procedures.",
+      "category": "Functional"
+    },
+    {
+      "domain_id": "statistical_analysis",
+      "name": "Statistical Analysis & Inference",
+      "description": "Descriptive/inferential statistics, hypothesis testing, index numbers (CPI/WPI/IIP).",
+      "category": "Functional"
+    },
+    {
+      "domain_id": "data_collection_tools",
+      "name": "Data Collection Tools (CAPI/CATI)",
+      "description": "Field data collection using CAPI/CATI applications, schedules, and mobile survey tools.",
+      "category": "Functional"
+    },
+    {
+      "domain_id": "data_visualization",
+      "name": "Data Visualization & Dashboarding",
+      "description": "Presenting statistical output via charts, dashboards, and public reports.",
+      "category": "Functional"
+    },
+    {
+      "domain_id": "national_accounts",
+      "name": "National Accounts & Economic Statistics",
+      "description": "GDP compilation, National Accounts Statistics, industrial/economic classifications.",
+      "category": "Domain"
+    },
+    {
+      "domain_id": "data_governance",
+      "name": "Official Statistics Act, Ethics & Data Governance",
+      "description": "Collection of Statistics Act, confidentiality norms, data quality standards.",
+      "category": "Domain"
+    },
+    {
+      "domain_id": "digital_tools",
+      "name": "Digital & AI Literacy",
+      "description": "Use of digital govt platforms, spreadsheet/BI tools, and basic AI-assisted analysis.",
+      "category": "Functional"
+    },
+    {
+      "domain_id": "leadership_coordination",
+      "name": "Field Coordination & People Management",
+      "description": "Supervising enumerators, coordinating field operations, stakeholder liaison.",
+      "category": "Behavioural"
+    },
+    {
+      "domain_id": "jee_physics",
+      "name": "Physics",
+      "description": "Mechanics, electromagnetism, optics, and modern physics at JEE level.",
+      "category": "Academic"
+    },
+    {
+      "domain_id": "jee_chemistry",
+      "name": "Chemistry",
+      "description": "Physical, organic, and inorganic chemistry at JEE level.",
+      "category": "Academic"
+    },
+    {
+      "domain_id": "jee_mathematics",
+      "name": "Mathematics",
+      "description": "Algebra, calculus, coordinate geometry, and trigonometry at JEE level.",
+      "category": "Academic"
+    }
+  ],
+  "roles": [
+    {
+      "role_id": "field_investigator",
+      "title": "Field Investigator",
+      "description": "Conducts household/enterprise surveys at the field level."
+    },
+    {
+      "role_id": "statistical_officer",
+      "title": "Statistical Officer",
+      "description": "Processes and analyses survey data, prepares estimates."
+    },
+    {
+      "role_id": "deputy_director",
+      "title": "Deputy Director (Statistics)",
+      "description": "Supervises statistical divisions, reviews outputs, coordinates across units."
+    },
+    {
+      "role_id": "testing",
+      "title": "Testing",
+      "description": "Demo role for evaluating the platform using JEE-style Physics/Chemistry/Mathematics content instead of the statistics framework."
+    }
+  ],
+  "role_requirements": [
+    {"role_id": "field_investigator", "domain_id": "survey_methodology", "target_level": 3},
+    {"role_id": "field_investigator", "domain_id": "data_collection_tools", "target_level": 4},
+    {"role_id": "field_investigator", "domain_id": "data_governance", "target_level": 3},
+    {"role_id": "field_investigator", "domain_id": "digital_tools", "target_level": 2},
+
+    {"role_id": "statistical_officer", "domain_id": "survey_methodology", "target_level": 4},
+    {"role_id": "statistical_officer", "domain_id": "statistical_analysis", "target_level": 4},
+    {"role_id": "statistical_officer", "domain_id": "data_visualization", "target_level": 3},
+    {"role_id": "statistical_officer", "domain_id": "national_accounts", "target_level": 3},
+    {"role_id": "statistical_officer", "domain_id": "data_governance", "target_level": 3},
+    {"role_id": "statistical_officer", "domain_id": "digital_tools", "target_level": 3},
+
+    {"role_id": "deputy_director", "domain_id": "statistical_analysis", "target_level": 4},
+    {"role_id": "deputy_director", "domain_id": "national_accounts", "target_level": 4},
+    {"role_id": "deputy_director", "domain_id": "data_governance", "target_level": 5},
+    {"role_id": "deputy_director", "domain_id": "leadership_coordination", "target_level": 4},
+    {"role_id": "deputy_director", "domain_id": "digital_tools", "target_level": 3},
+
+    {"role_id": "testing", "domain_id": "jee_physics", "target_level": 4},
+    {"role_id": "testing", "domain_id": "jee_chemistry", "target_level": 4},
+    {"role_id": "testing", "domain_id": "jee_mathematics", "target_level": 4}
+  ]
+}

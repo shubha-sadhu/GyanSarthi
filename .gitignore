@@ -1,0 +1,27 @@
+# --- Secrets: never commit these ---
+.env
+backend/.env
+node_server/.env
+frontend/.env
+
+# --- Python (backend) ---
+venv/
+__pycache__/
+*.pyc
+backend/venv/
+backend/__pycache__/
+backend/storage/
+
+# --- Node (node_server, frontend) ---
+node_modules/
+node_server/node_modules/
+node_server/storage/
+frontend/node_modules/
+frontend/dist/
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
