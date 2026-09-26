@@ -34,7 +34,18 @@ export function AuthProvider({ children }) {
       const { data } = await apiClient.post("/auth/login", { email, password });
       localStorage.setItem(TOKEN_KEY, data.token);
       setUser(data.user);
-      return { ok: true };
+      return { ok: true, user: data.user };
+    } catch (err) {
+      return { ok: false, error: extractErrorMessage(err, "Could not sign in.") };
+    }
+  }, []);
+
+  const loginAsAdmin = useCallback(async (email, password) => {
+    try {
+      const { data } = await apiClient.post("/auth/admin/login", { email, password });
+      localStorage.setItem(TOKEN_KEY, data.token);
+      setUser(data.user);
+      return { ok: true, user: data.user };
     } catch (err) {
       return { ok: false, error: extractErrorMessage(err, "Could not sign in.") };
     }
@@ -57,7 +68,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, loginAsAdmin, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

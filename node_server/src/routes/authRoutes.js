@@ -14,6 +14,38 @@ function toPublicUser(user) {
   return rest;
 }
 
+/**
+ * Verifies email/password and returns the matching user record, or throws
+ * an Error whose message is a stable code the route handlers translate
+ * into the right HTTP response. Shared by both login pipelines below so
+ * credential-checking logic exists in exactly one place.
+ */
+async function authenticateCredentials(email, password) {
+  if (!email || !password) {
+    throw new Error("MISSING_FIELDS");
+  }
+  const user = await userStore.findByEmail(email);
+  if (!user) {
+    throw new Error("INVALID_CREDENTIALS");
+  }
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) {
+    throw new Error("INVALID_CREDENTIALS");
+  }
+  return user;
+}
+
+function issueTokenResponse(res, user, status = 200) {
+  const token = signToken({
+    sub: user.id,
+    name: user.name,
+    roleId: user.roleId,
+    pythonUserId: user.pythonUserId,
+    isAdmin: user.isAdmin,
+  });
+  return res.status(status).json({ token, user: toPublicUser(user) });
+}
+
 router.post("/register", async (req, res) => {
   const { name, email, password, roleId, adminCode } = req.body || {};
 
@@ -52,15 +84,7 @@ router.post("/register", async (req, res) => {
     };
     await userStore.create(user);
 
-    const token = signToken({
-      sub: user.id,
-      name: user.name,
-      roleId: user.roleId,
-      pythonUserId: user.pythonUserId,
-      isAdmin: user.isAdmin,
-    });
-
-    return res.status(201).json({ token, user: toPublicUser(user) });
+    return issueTokenResponse(res, user, 201);
   } catch (err) {
     if (err.message === "EMAIL_TAKEN") {
       return res.status(409).json({ error: "An account with that email already exists." });
@@ -72,31 +96,38 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// Regular sign-in pipeline: any valid account, admin or not, gets a token.
 router.post("/login", async (req, res) => {
   const { email, password } = req.body || {};
-  if (!email || !password) {
-    return res.status(400).json({ error: "email and password are required." });
-  }
-
-  const user = await userStore.findByEmail(email);
-  if (!user) {
+  try {
+    const user = await authenticateCredentials(email, password);
+    return issueTokenResponse(res, user);
+  } catch (err) {
+    if (err.message === "MISSING_FIELDS") {
+      return res.status(400).json({ error: "email and password are required." });
+    }
     return res.status(401).json({ error: "Invalid email or password." });
   }
+});
 
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) {
+// Admin sign-in pipeline: credentials are checked the same way, but a
+// token is issued ONLY if the account is an admin. A correct password on
+// a non-admin account never gets a token from this endpoint at all — the
+// rejection happens here, server-side, not as a client-side afterthought.
+router.post("/admin/login", async (req, res) => {
+  const { email, password } = req.body || {};
+  try {
+    const user = await authenticateCredentials(email, password);
+    if (!user.isAdmin) {
+      return res.status(403).json({ error: "This account doesn't have admin access." });
+    }
+    return issueTokenResponse(res, user);
+  } catch (err) {
+    if (err.message === "MISSING_FIELDS") {
+      return res.status(400).json({ error: "email and password are required." });
+    }
     return res.status(401).json({ error: "Invalid email or password." });
   }
-
-  const token = signToken({
-    sub: user.id,
-    name: user.name,
-    roleId: user.roleId,
-    pythonUserId: user.pythonUserId,
-    isAdmin: user.isAdmin,
-  });
-
-  return res.json({ token, user: toPublicUser(user) });
 });
 
 router.get("/me", requireAuth, async (req, res) => {

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
-export default function LoginPage() {
-  const { login } = useAuth();
+export default function AdminLoginPage() {
+  const { loginAsAdmin } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,27 +14,35 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setSubmitting(true);
-    const result = await login(email, password);
+    // This hits a dedicated /auth/admin/login endpoint that checks isAdmin
+    // server-side — a non-admin account never gets a token back from it,
+    // even with the correct password.
+    const result = await loginAsAdmin(email, password);
     setSubmitting(false);
-    if (result.ok) {
-      navigate("/dashboard");
-    } else {
+
+    if (!result.ok) {
       setError(result.error);
+      return;
     }
+
+    navigate("/dashboard");
   }
 
   return (
     <div className="auth-shell">
       <div className="auth-card">
+        <div className="chip" style={{ marginBottom: 10 }}>
+          Admin portal
+        </div>
         <div className="auth-card__mark">Gyan Sarthi</div>
-        <div className="auth-card__tagline">Sign in to see your competency profile.</div>
+        <div className="auth-card__tagline">Sign in with an admin account to manage content and view organisation data.</div>
 
         {error && <div className="form-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="field">
             <label className="field__label" htmlFor="email">
-              Email
+              Admin email
             </label>
             <input
               id="email"
@@ -62,16 +70,13 @@ export default function LoginPage() {
             />
           </div>
 
-          <button className="btn btn--primary" type="submit" disabled={submitting} style={{ width: "100%" }}>
-            {submitting ? "Signing in…" : "Sign in"}
+          <button className="btn btn--stamp" type="submit" disabled={submitting} style={{ width: "100%" }}>
+            {submitting ? "Signing in…" : "Sign in as admin"}
           </button>
         </form>
 
         <div className="auth-card__switch">
-          New here? <Link to="/register">Create an account</Link>
-        </div>
-        <div className="auth-card__switch">
-          Are you an admin? <Link to="/admin/login">Sign in here</Link>
+          Not an admin? <Link to="/login">Sign in here</Link>
         </div>
       </div>
     </div>
