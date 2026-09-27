@@ -11,7 +11,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import competency_router, ingestion_router, quiz_router, users_router
+from app.routers import competency_router, content_router, ingestion_router, quiz_router, users_router
 
 app = FastAPI(
     title="Gyan Sarthi API",
@@ -33,6 +33,7 @@ app.include_router(users_router.router)
 app.include_router(ingestion_router.router)
 app.include_router(quiz_router.router)
 app.include_router(competency_router.router)
+app.include_router(content_router.router)
 
 
 @app.get("/")
