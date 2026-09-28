@@ -399,6 +399,32 @@ textarea {
   max-width: 60ch;
 }
 
+/* domain -> chapter/full-domain choice cards on the quiz page */
+
+.choice-card {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.choice-card:hover {
+  border-color: var(--ink);
+  background: #f5f6f8;
+}
+
+.choice-card__title {
+  font-weight: 600;
+  font-size: 0.93rem;
+}
+
+.choice-card__meta {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-top: 3px;
+}
+
 /* heatmap */
 
 .heatmap-row {

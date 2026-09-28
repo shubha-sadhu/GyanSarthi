@@ -8,6 +8,7 @@ import frameworkRoutes from "./routes/frameworkRoutes.js";
 import competencyRoutes from "./routes/competencyRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import ingestRoutes from "./routes/ingestRoutes.js";
+import contentRoutes from "./routes/contentRoutes.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/framework", frameworkRoutes);
 app.use("/api/competency", competencyRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/ingest", ingestRoutes);
+app.use("/api/content", contentRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {

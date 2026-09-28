@@ -12,6 +12,12 @@ const DIFFICULTIES = [
 export default function QuizPage() {
   const [domains, setDomains] = useState([]);
   const [domainId, setDomainId] = useState("");
+
+  const [chapters, setChapters] = useState([]);
+  const [loadingChapters, setLoadingChapters] = useState(false);
+
+  // scope: null (still choosing) | { chapterId: string|null, label: string }
+  const [scope, setScope] = useState(null);
   const [difficulty, setDifficulty] = useState(3);
   const [numQuestions, setNumQuestions] = useState(5);
 
@@ -23,6 +29,7 @@ export default function QuizPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // Load the domains this user's role tracks, once.
   useEffect(() => {
     apiClient.get("/competency/profile").then(({ data }) => {
       const list = data.domain_scores.map((d) => ({ domain_id: d.domain_id, name: d.domain_name }));
@@ -30,6 +37,29 @@ export default function QuizPage() {
       if (list.length) setDomainId(list[0].domain_id);
     });
   }, []);
+
+  // Whenever the domain changes, reload its chapters and reset scope.
+  useEffect(() => {
+    if (!domainId) return;
+    setScope(null);
+    setChapters([]);
+    setLoadingChapters(true);
+    apiClient
+      .get("/content/chapters", { params: { domain_id: domainId } })
+      .then(({ data }) => setChapters(data))
+      .catch(() => setChapters([]))
+      .finally(() => setLoadingChapters(false));
+  }, [domainId]);
+
+  function chooseFullDomain() {
+    setError("");
+    setScope({ chapterId: null, label: "Full domain assessment" });
+  }
+
+  function chooseChapter(chapter) {
+    setError("");
+    setScope({ chapterId: chapter.chapter_id, label: chapter.title });
+  }
 
   async function handleGenerate(e) {
     e.preventDefault();
@@ -42,6 +72,7 @@ export default function QuizPage() {
         domain_id: domainId,
         difficulty: Number(difficulty),
         num_questions: Number(numQuestions),
+        chapter_id: scope?.chapterId || undefined,
       });
       setQuiz(data);
     } catch (err) {
@@ -77,12 +108,20 @@ export default function QuizPage() {
     }
   }
 
+  function resetToScopeChoice() {
+    setQuiz(null);
+    setResult(null);
+    setAnswers({});
+    setScope(null);
+  }
+
   const feedbackByQuestion = {};
   if (result) {
     for (const f of result.feedback) feedbackByQuestion[f.question_id] = f;
   }
 
   const allAnswered = quiz && quiz.questions.every((q) => answers[q.question_id]);
+  const domainName = domains.find((d) => d.domain_id === domainId)?.name || "";
 
   return (
     <div>
@@ -94,56 +133,110 @@ export default function QuizPage() {
       {error && <div className="form-error">{error}</div>}
 
       {!quiz && (
-        <form className="panel" onSubmit={handleGenerate}>
-          <div className="field">
-            <label className="field__label" htmlFor="domain">
-              Competency domain
-            </label>
-            <select id="domain" className="field__select" value={domainId} onChange={(e) => setDomainId(e.target.value)}>
-              {domains.map((d) => (
-                <option key={d.domain_id} value={d.domain_id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+        <>
+          <div className="panel">
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label className="field__label" htmlFor="domain">
+                Competency domain
+              </label>
+              <select id="domain" className="field__select" value={domainId} onChange={(e) => setDomainId(e.target.value)}>
+                {domains.map((d) => (
+                  <option key={d.domain_id} value={d.domain_id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="field">
-            <label className="field__label" htmlFor="difficulty">
-              Difficulty
-            </label>
-            <select id="difficulty" className="field__select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-              {DIFFICULTIES.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!scope && (
+            <div className="panel">
+              <h2>{domainName} — choose what to test</h2>
 
-          <div className="field">
-            <label className="field__label" htmlFor="numQuestions">
-              Number of questions
-            </label>
-            <input
-              id="numQuestions"
-              type="number"
-              min={1}
-              max={10}
-              className="field__input"
-              value={numQuestions}
-              onChange={(e) => setNumQuestions(e.target.value)}
-            />
-          </div>
+              <div className="choice-card" onClick={chooseFullDomain}>
+                <div className="choice-card__title">Full domain assessment</div>
+                <div className="choice-card__meta">Draws from everything ingested in {domainName}.</div>
+              </div>
 
-          <button className="btn btn--primary" type="submit" disabled={generating || !domainId}>
-            {generating ? "Generating…" : "Generate assessment"}
-          </button>
-        </form>
+              {loadingChapters && <p className="loading-text">Loading chapters…</p>}
+
+              {!loadingChapters && chapters.length > 0 && (
+                <div style={{ marginTop: 18 }}>
+                  <div className="roadmap-item__materials-label">Or test one chapter:</div>
+                  {chapters.map((chapter) => (
+                    <div className="choice-card" key={chapter.chapter_id} onClick={() => chooseChapter(chapter)}>
+                      <div className="choice-card__title">{chapter.title}</div>
+                      <div className="choice-card__meta">
+                        {chapter.num_documents} document{chapter.num_documents === 1 ? "" : "s"} ·{" "}
+                        {chapter.num_chunks} chunk{chapter.num_chunks === 1 ? "" : "s"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!loadingChapters && chapters.length === 0 && (
+                <p className="empty-text" style={{ marginTop: 12 }}>
+                  No chapters created yet for this domain — an admin can upload a whole book via "Add training
+                  content" to auto-split it into chapters. You can still take the full domain assessment above if
+                  any content already exists.
+                </p>
+              )}
+            </div>
+          )}
+
+          {scope && (
+            <form className="panel" onSubmit={handleGenerate}>
+              <button type="button" className="btn btn--secondary" onClick={() => setScope(null)} style={{ marginBottom: 16 }}>
+                Change selection
+              </button>
+
+              <p style={{ fontSize: "0.85rem", color: "var(--ink-soft)", marginTop: 0, marginBottom: 18 }}>
+                Testing: <strong style={{ color: "var(--ink)" }}>{scope.label}</strong>
+              </p>
+
+              <div className="field">
+                <label className="field__label" htmlFor="difficulty">
+                  Difficulty
+                </label>
+                <select id="difficulty" className="field__select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                  {DIFFICULTIES.map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field">
+                <label className="field__label" htmlFor="numQuestions">
+                  Number of questions
+                </label>
+                <input
+                  id="numQuestions"
+                  type="number"
+                  min={1}
+                  max={10}
+                  className="field__input"
+                  value={numQuestions}
+                  onChange={(e) => setNumQuestions(e.target.value)}
+                />
+              </div>
+
+              <button className="btn btn--primary" type="submit" disabled={generating}>
+                {generating ? "Generating…" : "Generate assessment"}
+              </button>
+            </form>
+          )}
+        </>
       )}
 
       {quiz && (
         <div className="panel">
+          <p style={{ fontSize: "0.85rem", color: "var(--ink-soft)", marginTop: 0 }}>
+            Testing: <strong style={{ color: "var(--ink)" }}>{scope?.label}</strong>
+          </p>
+
           {quiz.questions.map((q, idx) => {
             const feedback = feedbackByQuestion[q.question_id];
             return (
@@ -184,14 +277,7 @@ export default function QuizPage() {
           )}
 
           {result && (
-            <button
-              className="btn btn--secondary"
-              onClick={() => {
-                setQuiz(null);
-                setResult(null);
-                setAnswers({});
-              }}
-            >
+            <button className="btn btn--secondary" onClick={resetToScopeChoice}>
               Take another assessment
             </button>
           )}
