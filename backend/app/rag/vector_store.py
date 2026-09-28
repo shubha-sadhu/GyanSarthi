@@ -73,6 +73,7 @@ def upsert_chunks(chunks: list[DocumentChunk], namespace: str = "default") -> No
             "_id": chunk.chunk_id,
             "text": chunk.text,
             "document_id": chunk.document_id,
+            "chapter_id": chunk.chapter_id or "",
             "domain_id": chunk.domain_id,
             "title": chunk.title,
             "source_type": chunk.source_type.value,
@@ -100,17 +101,26 @@ def query(
     query_text: str,
     top_k: int = 5,
     domain_id: str | None = None,
+    chapter_id: str | None = None,
     namespace: str = "default",
 ) -> list[RetrievedChunk]:
-    """Semantic search, optionally filtered to a single competency domain."""
+    """
+    Semantic search, optionally filtered to a domain and/or a specific
+    chapter within it. Filtering by chapter_id is what lets a chapter-wise
+    quiz draw from every document ever added to that chapter, not just one.
+    """
     index = _index()
-    filter_ = {"domain_id": {"$eq": domain_id}} if domain_id else None
+    filter_: dict = {}
+    if domain_id:
+        filter_["domain_id"] = {"$eq": domain_id}
+    if chapter_id:
+        filter_["chapter_id"] = {"$eq": chapter_id}
     result = index.search(
         namespace=namespace,
         query={
             "inputs": {"text": query_text},
             "top_k": top_k,
-            "filter": filter_,
+            "filter": filter_ or None,
         },
     )
     hits = result.get("result", {}).get("hits", [])

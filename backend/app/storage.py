@@ -72,6 +72,7 @@ class Storage:
         base = os.path.abspath(settings.data_dir)
         self.users = JsonCollection(os.path.join(base, "users.json"))
         self.documents = JsonCollection(os.path.join(base, "documents.json"))
+        self.chapters = JsonCollection(os.path.join(base, "chapters.json"))
         self.chunks = JsonCollection(os.path.join(base, "chunks.json"))
         self.quizzes = JsonCollection(os.path.join(base, "quizzes.json"))
         self.attempts = JsonCollection(os.path.join(base, "attempts.json"))

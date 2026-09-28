@@ -30,10 +30,23 @@ class SourceType(str, Enum):
     TEXT = "text"
 
 
+class Chapter(BaseModel):
+    """
+    A named grouping within a domain that one or more uploaded documents
+    can belong to — this is what lets an admin add several PDFs over time
+    that all count as "the same chapter" for chapter-wise testing.
+    """
+    chapter_id: str = Field(default_factory=lambda: new_id("chapter"))
+    domain_id: str
+    title: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class DocumentChunk(BaseModel):
     """A single retrievable unit of content, stored in the vector index."""
     chunk_id: str = Field(default_factory=lambda: new_id("chunk"))
     document_id: str
+    chapter_id: Optional[str] = None
     source_type: SourceType
     domain_id: str  # competency domain this chunk primarily supports
     title: str
@@ -44,11 +57,17 @@ class DocumentChunk(BaseModel):
 
 class IngestedDocument(BaseModel):
     document_id: str = Field(default_factory=lambda: new_id("doc"))
+    chapter_id: Optional[str] = None
     title: str
     source_type: SourceType
     domain_id: str
     uploaded_at: datetime = Field(default_factory=datetime.utcnow)
     num_chunks: int = 0
+    # "pending" until the embedding upsert into Pinecone actually
+    # succeeds — this is what lets the admin tell "parsed fine but never
+    # got embedded" apart from "fully searchable now".
+    embedding_status: str = "pending"
+    embedding_error: Optional[str] = None
 
 
 # --------------------------------------------------------------------------
